@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { FC, FormEvent } from "react";
+import { toast } from "sonner";
 import { FileText, Loader2, UploadCloud, X } from "lucide-react";
 
 type DiffUploadPanelProps = {
@@ -16,15 +17,12 @@ export const DiffUploadPanel: FC<DiffUploadPanelProps> = ({
 }) => {
   const [docxFile, setDocxFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    setError(null);
-    // reset per-attempt state
 
     if (!docxFile) {
-      setError("Please select a .docx file.");
+      toast.error("Please select a .docx file.");
       return;
     }
 
@@ -38,32 +36,28 @@ export const DiffUploadPanel: FC<DiffUploadPanelProps> = ({
         body: formData,
       });
 
+      const data = (await response.json().catch(() => null)) as
+        | { error?: string; job?: { currentUrl?: string }; documentId?: string }
+        | null;
+
       if (!response.ok) {
-        const data = (await response.json().catch(() => null)) as
-          | { error?: string }
-          | null;
-        throw new Error(data?.error ?? "Failed to store document.");
+        toast.error(data?.error ?? "Failed to store document.");
+        return;
       }
 
-      const data = (await response.json()) as {
-        job: { currentUrl?: string };
-        documentId: string;
-      };
-
-      const currentUrl = data.job?.currentUrl ?? `/api/documents/${data.documentId}`;
+      const currentUrl = data!.job?.currentUrl ?? `/api/documents/${data!.documentId}`;
       onLoaded?.({ currentUrl, diffUrl: currentUrl });
+      toast.success("Document uploaded successfully.");
+      setDocxFile(null);
     } catch (err) {
-      setError((err as Error).message);
+      toast.error((err as Error).message);
     } finally {
       setIsSubmitting(false);
-      // Clear the file after a successful upload so the panel is ready for the next one.
-      clearFile();
     }
   };
 
   const clearFile = () => {
     setDocxFile(null);
-    setError(null);
   };
 
   if (inline) {
@@ -77,7 +71,6 @@ export const DiffUploadPanel: FC<DiffUploadPanelProps> = ({
           const file = e.dataTransfer.files[0];
           if (file?.name.endsWith(".docx")) {
             setDocxFile(file);
-            setError(null);
           }
         }}
       >
@@ -97,7 +90,6 @@ export const DiffUploadPanel: FC<DiffUploadPanelProps> = ({
             onChange={(e) => {
               const file = e.target.files?.[0] ?? null;
               setDocxFile(file);
-              setError(null);
             }}
           />
         </label>
@@ -128,11 +120,6 @@ export const DiffUploadPanel: FC<DiffUploadPanelProps> = ({
             </>
           )}
         </button>
-        {error && (
-          <span className="max-w-[180px] truncate text-base text-red-600">
-            {error}
-          </span>
-        )}
       </form>
     );
   }
@@ -182,20 +169,11 @@ export const DiffUploadPanel: FC<DiffUploadPanelProps> = ({
                 onChange={(e) => {
                   const file = e.target.files?.[0] ?? null;
                   setDocxFile(file);
-                  setError(null);
                 }}
               />
             </label>
           )}
         </div>
-
-        {/* Error */}
-        {error && (
-          <p className="flex items-start gap-1.5 text-[11px] text-red-600 dark:text-red-400">
-            <X className="mt-0.5 h-3 w-3 shrink-0" />
-            {error}
-          </p>
-        )}
 
         <button
           type="submit"

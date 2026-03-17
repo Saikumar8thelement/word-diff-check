@@ -49,6 +49,17 @@ export async function POST(request: Request) {
         ? docxFile.type
         : DOCX_MIME;
 
+    // Check for duplicate: document with same fileName already exists
+    const existing = await prisma.document.findFirst({
+      where: { fileName: { equals: fileName, mode: "insensitive" } },
+    });
+    if (existing) {
+      return NextResponse.json(
+        { error: `"${fileName}" is already present. Please use a different document.` },
+        { status: 409 },
+      );
+    }
+
     const document = await prisma.document.create({
       data: {
         fileName,
