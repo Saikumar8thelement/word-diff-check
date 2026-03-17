@@ -81,12 +81,14 @@ export const DiffUploadPanel: FC<DiffUploadPanelProps> = ({
           }
         }}
       >
-        <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-zinc-300 bg-zinc-100 px-3 py-1.5 text-xs font-medium text-zinc-700 transition hover:border-zinc-400 hover:bg-zinc-200/80 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:border-zinc-600 dark:hover:bg-zinc-700">
-          <UploadCloud className="h-3.5 w-3.5" />
+        <label className="inline-flex cursor-pointer items-center gap-2 px-4 py-2.5 text-base font-medium border border-gray-200 rounded-lg bg-white text-gray-700 hover:bg-gray-50 transition-colors">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+            <path d="M2 4h12M4 8h8M6 12h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
           {docxFile ? (
             <span className="max-w-[140px] truncate">{docxFile.name}</span>
           ) : (
-            "Select or drop .docx"
+            "Select .docx"
           )}
           <input
             type="file"
@@ -103,7 +105,7 @@ export const DiffUploadPanel: FC<DiffUploadPanelProps> = ({
           <button
             type="button"
             onClick={clearFile}
-            className="shrink-0 cursor-pointer rounded-full p-1 text-zinc-400 hover:bg-zinc-200 hover:text-zinc-600 dark:hover:bg-zinc-700 dark:hover:text-zinc-200"
+            className="shrink-0 cursor-pointer rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
             aria-label="Remove file"
           >
             <X className="h-3 w-3" />
@@ -112,19 +114,22 @@ export const DiffUploadPanel: FC<DiffUploadPanelProps> = ({
         <button
           type="submit"
           disabled={isSubmitting || !docxFile}
-          className="inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-blue-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-400"
+          className="inline-flex cursor-pointer items-center gap-2 px-4 py-2.5 text-base font-medium rounded-lg bg-gray-900 text-white hover:bg-gray-700 transition-colors disabled:cursor-not-allowed disabled:bg-gray-400"
         >
           {isSubmitting ? (
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
           ) : (
             <>
-              <UploadCloud className="h-3.5 w-3.5" />
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+                <path d="M8 3v8M4 7l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M2 13h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
               Upload
             </>
           )}
         </button>
         {error && (
-          <span className="max-w-[180px] truncate text-[11px] text-red-600 dark:text-red-400">
+          <span className="max-w-[180px] truncate text-base text-red-600">
             {error}
           </span>
         )}

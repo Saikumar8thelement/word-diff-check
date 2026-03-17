@@ -37,30 +37,43 @@ export const JobsTable: FC<JobsTableProps> = ({
 
   const emptyMessage = isSearchActive
     ? "No documents match your search. Try a different term."
-    : "No documents in this list yet.";
+    : "No documents found.";
+
+  const complexityStyles: Record<string, string> = {
+    LOW: "bg-green-50 text-green-800 border-green-200",
+    MEDIUM: "bg-amber-50 text-amber-800 border-amber-200",
+    HIGH: "bg-red-50 text-red-800 border-red-200",
+  };
+
+  const statusStyles: Record<string, string> = {
+    backlog: "bg-gray-100 text-gray-600 border-gray-200",
+    processing: "bg-blue-50 text-blue-700 border-blue-200",
+    completed: "bg-green-50 text-green-700 border-green-200",
+    failed: "bg-red-50 text-red-700 border-red-200",
+  };
 
   return (
     <div className="overflow-x-auto overflow-y-auto">
-      <table className="min-w-full border-separate border-spacing-0 text-left text-xs text-zinc-700 dark:text-zinc-200">
-        <thead className="sticky top-0 z-20 bg-zinc-100 dark:bg-zinc-900">
-          <tr className="border-b border-zinc-200 text-[11px] uppercase tracking-wide text-zinc-600 dark:border-zinc-800 dark:text-zinc-400">
-            <th className="sticky left-0 z-30 bg-zinc-100 px-3 py-3 dark:bg-zinc-900">
+      <table className="w-full text-base">
+        <thead>
+          <tr className="bg-gray-50 border-b border-gray-200">
+            <th className="w-12 px-4 py-3.5 text-left">
               <input
                 ref={headerCheckRef}
                 type="checkbox"
                 checked={allSelected}
                 onChange={onToggleSelectAll}
                 aria-label={allSelected ? "Deselect all" : "Select all"}
-                className="cursor-pointer h-3.5 w-3.5 rounded border-zinc-300 text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                className="h-4 w-4 rounded border-gray-300 accent-gray-900 cursor-pointer"
               />
             </th>
-            <th className="px-3 py-3">#</th>
-            <th className="px-3 py-3">Policy Name</th>
-            <th className="px-3 py-3">File Name</th>
-            <th className="px-3 py-3">Source</th>
-            <th className="px-3 py-3">Version</th>
-            <th className="px-3 py-3">Status</th>
-            <th className="px-3 py-3">Complexity</th>
+            <th className="px-4 py-3.5 text-left text-sm font-medium uppercase tracking-wider text-gray-400 w-10">#</th>
+            <th className="px-4 py-3.5 text-left text-sm font-medium uppercase tracking-wider text-gray-400">Policy name</th>
+            <th className="px-4 py-3.5 text-left text-sm font-medium uppercase tracking-wider text-gray-400">File name</th>
+            <th className="px-4 py-3.5 text-left text-sm font-medium uppercase tracking-wider text-gray-400">Source</th>
+            <th className="px-4 py-3.5 text-left text-sm font-medium uppercase tracking-wider text-gray-400">Version</th>
+            <th className="px-4 py-3.5 text-left text-sm font-medium uppercase tracking-wider text-gray-400">Status</th>
+            <th className="px-4 py-3.5 text-left text-sm font-medium uppercase tracking-wider text-gray-400">Complexity</th>
           </tr>
         </thead>
         <tbody>
@@ -78,18 +91,12 @@ export const JobsTable: FC<JobsTableProps> = ({
                     router.push(`/jobs/${job.id}`);
                   }
                 }}
-                className={`group cursor-pointer border-b border-zinc-200/80 text-xs transition-colors duration-150 dark:border-zinc-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset ${
-                  isSelected
-                    ? "bg-blue-50/80 dark:bg-blue-950/40"
-                    : "bg-white hover:bg-zinc-100/80 dark:bg-zinc-900 dark:hover:bg-zinc-800"
+                className={`group cursor-pointer border-b border-gray-100 last:border-none hover:bg-gray-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset ${
+                  isSelected ? "bg-blue-50/80" : "bg-white"
                 }`}
               >
                 <td
-                  className={`sticky left-0 z-0 px-3 py-3 ${
-                    isSelected
-                      ? "bg-blue-50/80 dark:bg-blue-950/40"
-                      : "bg-white group-hover:bg-zinc-100/80 dark:bg-zinc-900 dark:group-hover:bg-zinc-800"
-                  }`}
+                  className={`px-4 py-4 ${isSelected ? "bg-blue-50/80" : "bg-white group-hover:bg-gray-50"}`}
                   onClick={(e) => e.stopPropagation()}
                 >
                   <input
@@ -98,48 +105,36 @@ export const JobsTable: FC<JobsTableProps> = ({
                     onChange={() => onToggleSelect(job.id)}
                     onClick={(e) => e.stopPropagation()}
                     aria-label={`Select ${job.policyName}`}
-                    className="cursor-pointer h-3.5 w-3.5 rounded border-zinc-300 text-blue-600 focus:ring-2 focus:ring-blue-500"
+                    className="h-4 w-4 rounded border-gray-300 accent-gray-900 cursor-pointer"
                   />
                 </td>
-                <td className="px-3 py-3 text-[11px] text-zinc-500">
-                  {index + 1}
-                </td>
-                <td className="max-w-xs px-3 py-3 text-[13px] font-medium text-zinc-900 dark:text-zinc-50">
-                  <span className="truncate text-blue-600 dark:text-blue-400">
+                <td className="px-4 py-4 text-gray-400">{index + 1}</td>
+                <td className="px-4 py-4">
+                  <a
+                    href={`/jobs/${job.id}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="font-medium text-gray-900 hover:underline underline-offset-2"
+                  >
                     {job.policyName}
-                  </span>
+                  </a>
                 </td>
-                <td className="px-3 py-3 text-[12px] text-zinc-700 dark:text-zinc-200">
+                <td className="px-4 py-4 font-mono text-sm text-gray-500">
                   {job.fileName}
                 </td>
-                <td className="px-3 py-3 text-[12px] text-zinc-500 dark:text-zinc-400">
-                  {job.source}
-                </td>
-                <td className="px-3 py-3 text-[12px] text-zinc-700 dark:text-zinc-200">
-                  {job.version}
-                </td>
-                <td className="px-3 py-3">
+                <td className="px-4 py-4 text-gray-500">{job.source}</td>
+                <td className="px-4 py-4 text-gray-500">{job.version}</td>
+                <td className="px-4 py-4">
                   <span
-                    className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ${
-                      job.status === "failed"
-                        ? "bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-300"
-                        : "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200"
-                    }`}
+                    className={`inline-flex items-center px-2.5 py-1 rounded-full text-sm font-medium border ${statusStyles[job.status] ?? statusStyles.backlog}`}
                   >
-                    {job.status.toUpperCase()}
+                    {job.status.charAt(0).toUpperCase() + job.status.slice(1).toLowerCase()}
                   </span>
                 </td>
-                <td className="px-3 py-3">
+                <td className="px-4 py-4">
                   <span
-                    className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                      job.complexity === "HIGH"
-                        ? "bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-300"
-                        : job.complexity === "MEDIUM"
-                        ? "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
-                        : "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
-                    }`}
+                    className={`inline-flex items-center px-2.5 py-1 rounded-full text-sm font-medium border ${complexityStyles[job.complexity] ?? complexityStyles.MEDIUM}`}
                   >
-                    {job.complexity}
+                    {job.complexity.charAt(0) + job.complexity.slice(1).toLowerCase()}
                   </span>
                 </td>
               </tr>
@@ -149,7 +144,7 @@ export const JobsTable: FC<JobsTableProps> = ({
             <tr>
               <td
                 colSpan={8}
-                className="px-3 py-12 text-center text-xs text-zinc-500 dark:text-zinc-400"
+                className="px-4 py-12 text-center text-gray-400 text-base"
               >
                 {emptyMessage}
               </td>

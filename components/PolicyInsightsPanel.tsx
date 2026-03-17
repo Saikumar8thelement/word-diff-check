@@ -1,5 +1,4 @@
 import type { FC } from "react";
-import { Lightbulb } from "lucide-react";
 import { PolicyInsightItem } from "./PolicyInsightItem";
 import type { AnalysisItem } from "@/lib/types";
 
@@ -14,26 +13,24 @@ export const PolicyInsightsPanel: FC<PolicyInsightsPanelProps> = ({
   const hasItems = items.length > 0;
 
   return (
-    <aside className="flex h-full min-h-0 flex-col border-l border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950">
-      <div className="flex items-center justify-between border-b border-zinc-200 px-5 py-4 dark:border-zinc-800">
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
-            <Lightbulb className="h-4 w-4" />
-          </div>
-          <div>
-            <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-              Policy Insights
-            </h2>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">
-              {hasItems
-                ? `${items.length} issue${items.length === 1 ? "" : "s"} detected`
-                : "No analysis yet"}
-            </p>
-          </div>
-        </div>
+    <div className="flex min-h-0 flex-1 flex-col p-4">
+      <div className="mb-1 flex items-center gap-2">
+        <svg
+          width="13"
+          height="13"
+          viewBox="0 0 16 16"
+          fill="none"
+          className="shrink-0 text-gray-400"
+        >
+          <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5" />
+          <path d="M8 7v4M8 5v.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        </svg>
+        <p className="text-xs font-medium text-gray-700">Policy Insights</p>
       </div>
-
-      <div className="flex-1 space-y-3 overflow-y-auto px-5 py-4">
+      <p className="mb-4 pl-5 text-xs text-gray-400">
+        {hasItems ? `${items.length} issue${items.length === 1 ? "" : "s"} detected` : "No analysis yet"}
+      </p>
+      <div className="flex-1 space-y-3 overflow-y-auto">
         {hasItems ? (
           <div className="space-y-3">
             {items.map((item, index) => (
@@ -45,11 +42,13 @@ export const PolicyInsightsPanel: FC<PolicyInsightsPanelProps> = ({
             ))}
           </div>
         ) : (
-          <p className="py-6 text-center text-sm text-zinc-500 dark:text-zinc-400">
-            Process a document to see policy analysis insights.
-          </p>
+          <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
+            <p className="text-center text-xs leading-relaxed text-gray-400">
+              Process a document to see policy analysis insights.
+            </p>
+          </div>
         )}
       </div>
-    </aside>
+    </div>
   );
 };
