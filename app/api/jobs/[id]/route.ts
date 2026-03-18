@@ -1,13 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-
-function getBaseName(fileName: string): string {
-  return fileName
-    .replace(/\.docx$/i, "")
-    .replace(/[-_]?v\d+$/i, "")
-    .replace(/[-_]$/, "")
-    .trim();
-}
+import { getBaseName } from "@/lib/documentVersion";
 
 async function hasPreviousVersion(
   fileName: string,
@@ -23,6 +16,8 @@ async function hasPreviousVersion(
       OR: [
         { fileName: { startsWith: `${baseName}_v` } },
         { fileName: { startsWith: `${baseName}-v` } },
+        { fileName: { startsWith: `${baseName}_` } },
+        { fileName: { startsWith: `${baseName}-` } },
       ],
     },
   });

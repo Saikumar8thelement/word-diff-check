@@ -6,11 +6,14 @@ import { renderAsync } from "docx-preview";
 import Mark from "mark.js";
 import {
   ArrowLeft,
+  ChevronDown,
+  ChevronUp,
   GitCompare,
   Maximize2,
-  Search,
   Loader2,
   FileText,
+  Search,
+  X,
 } from "lucide-react";
 
 type DocumentViewerProps = {
@@ -37,6 +40,9 @@ export const DocumentViewer: FC<DocumentViewerProps> = ({
   const [isDiffMode, setIsDiffMode] = useState(false);
   const [renderState, setRenderState] = useState<RenderState>("idle");
   const [zoom, setZoom] = useState(100);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchMatchCount, setSearchMatchCount] = useState(0);
+  const [currentMatchIndex, setCurrentMatchIndex] = useState(0);
 
   const previewContainerRef = useRef<HTMLDivElement>(null);
 
@@ -92,24 +98,79 @@ export const DocumentViewer: FC<DocumentViewerProps> = ({
     };
   }, [renderDocx]);
 
+  /** Group adjacent mark elements into logical occurrences (docx splits text across spans) */
+  const getSearchMatchGroups = useCallback(() => {
+    const container = previewContainerRef.current;
+    if (!container) return [];
+    const marks = Array.from(container.querySelectorAll(".chunk-highlight-search"));
+    if (marks.length === 0) return [];
+
+    const groups: Element[][] = [];
+    let current: Element[] = [marks[0]];
+
+    for (let i = 1; i < marks.length; i++) {
+      const prev = marks[i - 1];
+      const curr = marks[i];
+      try {
+        const range = document.createRange();
+        range.setStartAfter(prev);
+        range.setEndBefore(curr);
+        const between = range.toString();
+        if (between.replace(/\s/g, "").length === 0) {
+          current.push(curr);
+        } else {
+          groups.push(current);
+          current = [curr];
+        }
+      } catch {
+        current.push(curr);
+      }
+    }
+    groups.push(current);
+    return groups;
+  }, []);
+
   useEffect(() => {
     const container = previewContainerRef.current;
     if (!container || renderState !== "success") return;
 
     const mark = new Mark(container);
+    mark.unmark();
 
-    if (!highlightText?.trim()) {
-      mark.unmark();
+    const query = searchQuery.trim();
+    if (!query) {
+      setSearchMatchCount(0);
+      setCurrentMatchIndex(0);
+    }
+    if (query) {
+      // Search: highlight matches in yellow
+      const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const pattern = escaped.replace(/\s+/g, "\\s+");
+      const regex = new RegExp(pattern, "gi");
+      mark.markRegExp(regex, {
+        className: "chunk-highlight chunk-highlight-search",
+        acrossElements: true,
+        ignoreJoiners: true,
+        done() {
+          const groups = getSearchMatchGroups();
+          const count = groups.length;
+          setSearchMatchCount(count);
+          setCurrentMatchIndex(0);
+          if (count > 0 && groups[0][0]) {
+            groups[0][0].scrollIntoView({ behavior: "smooth", block: "center" });
+          }
+        },
+      });
       return;
     }
 
-    mark.unmark();
+    // Capsule highlight: no search, use highlightText from policy insights
+    if (!highlightText?.trim()) return;
+
     let normalized = highlightText.replace(/\s+/g, " ").trim();
-    // Strip leading clause identifiers (e.g. 1.1, 1.3a, 1.2a, 9.2)
     normalized = normalized.replace(/^\d+(\.\d+)*[a-zA-Z]?[\s:]+/, "").trim();
     if (!normalized) return;
 
-    // Use regex for exact phrase match to avoid partial word highlighting (e.g. "to" in next sentence)
     const escaped = normalized.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const pattern = escaped.replace(/ /g, "\\s+");
     const regex = new RegExp(pattern, "gi");
@@ -127,10 +188,30 @@ export const DocumentViewer: FC<DocumentViewerProps> = ({
         }
       },
     });
-  }, [highlightText, highlightIssueExist, renderState]);
+  }, [searchQuery, highlightText, highlightIssueExist, renderState, getSearchMatchGroups]);
 
   const handleZoomIn = () => setZoom((z) => Math.min(z + 10, 200));
   const handleZoomOut = () => setZoom((z) => Math.max(z - 10, 50));
+
+  const scrollToSearchMatch = (index: number) => {
+    const groups = getSearchMatchGroups();
+    if (index >= 0 && index < groups.length && groups[index][0]) {
+      setCurrentMatchIndex(index);
+      groups[index][0].scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  };
+
+  const handleSearchPrev = () => {
+    if (searchMatchCount <= 0) return;
+    const next = currentMatchIndex <= 0 ? searchMatchCount - 1 : currentMatchIndex - 1;
+    scrollToSearchMatch(next);
+  };
+
+  const handleSearchNext = () => {
+    if (searchMatchCount <= 0) return;
+    const next = currentMatchIndex >= searchMatchCount - 1 ? 0 : currentMatchIndex + 1;
+    scrollToSearchMatch(next);
+  };
 
   const canToggleDiff = Boolean(diffUrl && hasPreviousVersion);
 
@@ -230,13 +311,54 @@ export const DocumentViewer: FC<DocumentViewerProps> = ({
 
       {/* Search bar */}
       <div className="border-b border-gray-100 bg-white px-5 py-2.5">
-        <div className="relative max-w-xs">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
+        <div className="flex max-w-md items-center gap-2 rounded-lg border border-gray-200 bg-white px-2 py-1.5">
+          <Search className="h-3.5 w-3.5 shrink-0 text-gray-400" />
           <input
             type="search"
             placeholder="Search in document…"
-            className="w-full rounded-lg border border-gray-200 bg-white py-1.5 pl-8 pr-3 text-sm text-gray-900 outline-none placeholder:text-gray-400 transition-colors focus:border-gray-400"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="min-w-0 flex-1 bg-transparent py-0.5 text-sm text-gray-900 outline-none placeholder:text-gray-400"
           />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery("")}
+              className="shrink-0 rounded p-0.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+              aria-label="Clear search"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+          {searchQuery.trim() && (
+            <>
+              <span className="shrink-0 text-xs text-gray-500 tabular-nums">
+                {searchMatchCount > 0
+                  ? `${currentMatchIndex + 1} / ${searchMatchCount}`
+                  : "0 / 0"}
+              </span>
+              <div className="flex shrink-0 items-center gap-0.5 border-l border-gray-200 pl-2">
+                <button
+                  type="button"
+                  onClick={handleSearchPrev}
+                  disabled={searchMatchCount <= 0}
+                  className="rounded p-0.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
+                  aria-label="Previous match"
+                >
+                  <ChevronUp className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSearchNext}
+                  disabled={searchMatchCount <= 0}
+                  className="rounded p-0.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
+                  aria-label="Next match"
+                >
+                  <ChevronDown className="h-4 w-4" />
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
 

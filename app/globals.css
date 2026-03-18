@@ -70,3 +70,7 @@ button:disabled,
 .chunk-highlight-green {
   background-color: #bbf7d0;
 }
+
+.chunk-highlight-search {
+  background-color: #fef08a;
+}

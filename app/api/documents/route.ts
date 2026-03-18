@@ -1,18 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { JobStatus } from "@/lib/generated/prisma/client";
+import { parseVersion } from "@/lib/documentVersion";
 
 const DOCX_MIME =
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-
-/**
- * Extract version from filename: v1 -> "1", v2 -> "2", v3 -> "3", etc.
- * Searches for v followed by digits (e.g. MyPolicy_v2.docx, doc_v3.docx).
- */
-function parseVersion(fileName: string): string {
-  const match = fileName.match(/v(\d+)/i);
-  return match ? match[1] : "1";
-}
 
 export async function POST(request: Request) {
   try {

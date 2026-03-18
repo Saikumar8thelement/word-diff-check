@@ -3,21 +3,10 @@ import path from "path";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { runDocxDiff } from "@/lib/docxDiff";
+import { getBaseName } from "@/lib/documentVersion";
 
 const DOCX_MIME =
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-
-/**
- * Extract base name from filename by removing .docx and version suffix.
- * e.g. "MyPolicy_v2.docx" -> "MyPolicy"
- */
-function getBaseName(fileName: string): string {
-  return fileName
-    .replace(/\.docx$/i, "")
-    .replace(/[-_]?v\d+$/i, "")
-    .replace(/[-_]$/, "")
-    .trim();
-}
 
 /**
  * GET /api/documents/[id]/diff
@@ -54,6 +43,8 @@ export async function GET(
       OR: [
         { fileName: { startsWith: `${baseName}_v` } },
         { fileName: { startsWith: `${baseName}-v` } },
+        { fileName: { startsWith: `${baseName}_` } },
+        { fileName: { startsWith: `${baseName}-` } },
       ],
     },
     orderBy: { createdAt: "desc" },
