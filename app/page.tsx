@@ -133,7 +133,7 @@ export default function Home() {
   const selectedBacklogIds =
     activeStatus === "backlog"
       ? Array.from(selectedIds).filter((id) =>
-          activeItems.some((j) => j.id === id && j.status === "backlog"),
+          activeItems.some((j) => j.id === id && (j.status === "backlog" || j.status === "failed")),
         )
       : [];
   const hasSelection = selectedBacklogIds.length > 0;

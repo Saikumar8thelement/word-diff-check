@@ -21,14 +21,14 @@ export async function POST(request: Request) {
     const jobs = await prisma.job.findMany({
       where: {
         id: { in: jobIds },
-        status: JobStatus.BACKLOG,
+        status: { in: [JobStatus.BACKLOG, JobStatus.FAILED] },
       },
       include: { document: true },
     });
 
     if (jobs.length === 0) {
       return NextResponse.json(
-        { error: "No backlog jobs found for the given IDs." },
+        { error: "No backlog or failed jobs found for the given IDs." },
         { status: 400 },
       );
     }

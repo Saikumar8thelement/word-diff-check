@@ -17,7 +17,9 @@ export async function POST(request: Request) {
     const job = await prisma.job.findFirst({
       where: {
         documentId,
-        status: JobStatus.BACKLOG,
+        status: {
+          in: [JobStatus.BACKLOG, JobStatus.FAILED],
+        },
       },
       orderBy: { createdAt: "desc" },
     });
