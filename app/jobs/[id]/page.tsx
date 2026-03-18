@@ -14,26 +14,65 @@ export default function JobViewerPage({ params }: JobViewerPageProps) {
   const { id: jobId } = use(params);
   const router = useRouter();
   const [job, setJob] = useState<Job | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
+    setIsLoading(true);
     fetch(`/api/jobs/${jobId}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data: { job?: Job } | null) => {
-        if (!cancelled && data?.job) setJob(data.job);
+        if (!cancelled) {
+          setJob(data?.job ?? null);
+        }
       })
-      .catch(() => {});
+      .catch(() => {
+        if (!cancelled) setJob(null);
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
     return () => {
       cancelled = true;
     };
   }, [jobId]);
 
-  const currentUrl = job?.currentUrl ?? "/MyPolicy_v4.docx";
-  const diffUrl = job?.diffUrl;
-  const hasPreviousVersion = job?.hasPreviousVersion ?? false;
-
   const issues = Array.isArray(job?.analysis) ? job.analysis : [];
   const issueCount = issues.length;
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 font-sans text-gray-900">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900" />
+        <p className="mt-4 text-sm text-gray-500">Loading document…</p>
+        <button
+          type="button"
+          onClick={() => router.push("/")}
+          className="mt-4 text-sm font-medium text-gray-600 underline hover:text-gray-900"
+        >
+          Back to queue
+        </button>
+      </div>
+    );
+  }
+
+  if (!job) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 font-sans text-gray-900">
+        <p className="text-base font-medium text-gray-700">Job not found</p>
+        <p className="mt-2 text-sm text-gray-500">
+          This job may have been removed or the link is invalid.
+        </p>
+        <button
+          type="button"
+          onClick={() => router.push("/")}
+          className="mt-4 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700"
+        >
+          Back to queue
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-gray-50 font-sans text-gray-900">
@@ -41,19 +80,18 @@ export default function JobViewerPage({ params }: JobViewerPageProps) {
         {/* Document area */}
         <div className="flex min-w-0 flex-1 flex-col border-r border-gray-200">
           <DocumentViewer
-            currentUrl={currentUrl}
-            diffUrl={diffUrl}
-            hasPreviousVersion={hasPreviousVersion}
+            currentUrl={job.currentUrl!}
+            diffUrl={job.diffUrl}
+            hasPreviousVersion={job.hasPreviousVersion ?? false}
             onBack={() => router.push("/")}
-            policyName={job?.policyName}
+            policyName={job.policyName}
           />
         </div>
 
         {/* Right sidebar */}
         <aside className="flex w-64 shrink-0 flex-col border-l border-gray-200 bg-white">
           {/* Document details */}
-          {job && (
-            <div className="border-b border-gray-100 p-4">
+          <div className="border-b border-gray-100 p-4">
               <p className="mb-3 text-xs font-medium uppercase tracking-wider text-gray-400">
                 Document details
               </p>
@@ -78,10 +116,9 @@ export default function JobViewerPage({ params }: JobViewerPageProps) {
                 ))}
               </div>
             </div>
-          )}
 
           {/* Policy insights */}
-          <PolicyInsightsPanel analysis={job?.analysis} />
+          <PolicyInsightsPanel analysis={job.analysis} />
         </aside>
       </div>
 

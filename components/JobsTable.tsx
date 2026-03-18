@@ -39,12 +39,6 @@ export const JobsTable: FC<JobsTableProps> = ({
     ? "No documents match your search. Try a different term."
     : "No documents found.";
 
-  const complexityStyles: Record<string, string> = {
-    LOW: "bg-green-50 text-green-800 border-green-200",
-    MEDIUM: "bg-amber-50 text-amber-800 border-amber-200",
-    HIGH: "bg-red-50 text-red-800 border-red-200",
-  };
-
   const statusStyles: Record<string, string> = {
     backlog: "bg-gray-100 text-gray-600 border-gray-200",
     processing: "bg-blue-50 text-blue-700 border-blue-200",
@@ -71,9 +65,8 @@ export const JobsTable: FC<JobsTableProps> = ({
             <th className="px-4 py-3.5 text-left text-sm font-medium uppercase tracking-wider text-gray-400">Policy name</th>
             <th className="px-4 py-3.5 text-left text-sm font-medium uppercase tracking-wider text-gray-400">File name</th>
             <th className="px-4 py-3.5 text-left text-sm font-medium uppercase tracking-wider text-gray-400">Source</th>
-            <th className="px-4 py-3.5 text-left text-sm font-medium uppercase tracking-wider text-gray-400">Version</th>
+            <th className="px-4 py-3.5 text-center text-sm font-medium uppercase tracking-wider text-gray-400">Version</th>
             <th className="px-4 py-3.5 text-left text-sm font-medium uppercase tracking-wider text-gray-400">Status</th>
-            <th className="px-4 py-3.5 text-left text-sm font-medium uppercase tracking-wider text-gray-400">Complexity</th>
           </tr>
         </thead>
         <tbody>
@@ -122,19 +115,12 @@ export const JobsTable: FC<JobsTableProps> = ({
                   {job.fileName}
                 </td>
                 <td className="px-4 py-4 text-gray-500">{job.source}</td>
-                <td className="px-4 py-4 text-gray-500">{job.version}</td>
+                <td className="px-4 py-4 text-center text-gray-500">{job.version}</td>
                 <td className="px-4 py-4">
                   <span
                     className={`inline-flex items-center px-2.5 py-1 rounded-full text-sm font-medium border ${statusStyles[job.status] ?? statusStyles.backlog}`}
                   >
                     {job.status.charAt(0).toUpperCase() + job.status.slice(1).toLowerCase()}
-                  </span>
-                </td>
-                <td className="px-4 py-4">
-                  <span
-                    className={`inline-flex items-center px-2.5 py-1 rounded-full text-sm font-medium border ${complexityStyles[job.complexity] ?? complexityStyles.MEDIUM}`}
-                  >
-                    {job.complexity.charAt(0) + job.complexity.slice(1).toLowerCase()}
                   </span>
                 </td>
               </tr>
@@ -143,7 +129,7 @@ export const JobsTable: FC<JobsTableProps> = ({
           {items.length === 0 && (
             <tr>
               <td
-                colSpan={8}
+                colSpan={7}
                 className="px-4 py-12 text-center text-gray-400 text-base"
               >
                 {emptyMessage}
