@@ -57,3 +57,16 @@ button:disabled,
   color: #991b1b;
   text-decoration: line-through;
 }
+
+.chunk-highlight {
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+.chunk-highlight-red {
+  background-color: #fecaca;
+}
+
+.chunk-highlight-green {
+  background-color: #bbf7d0;
+}

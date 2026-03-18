@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import type { FC } from "react";
 import { renderAsync } from "docx-preview";
+import Mark from "mark.js";
 import {
   ArrowLeft,
   GitCompare,
@@ -18,6 +19,8 @@ type DocumentViewerProps = {
   hasPreviousVersion?: boolean;
   onBack?: () => void;
   policyName?: string;
+  highlightText?: string | null;
+  highlightIssueExist?: boolean;
 };
 
 type RenderState = "idle" | "loading" | "success" | "error" | "no-previous";
@@ -28,6 +31,8 @@ export const DocumentViewer: FC<DocumentViewerProps> = ({
   hasPreviousVersion = false,
   onBack,
   policyName,
+  highlightText,
+  highlightIssueExist = false,
 }) => {
   const [isDiffMode, setIsDiffMode] = useState(false);
   const [renderState, setRenderState] = useState<RenderState>("idle");
@@ -87,13 +92,50 @@ export const DocumentViewer: FC<DocumentViewerProps> = ({
     };
   }, [renderDocx]);
 
+  useEffect(() => {
+    const container = previewContainerRef.current;
+    if (!container || renderState !== "success") return;
+
+    const mark = new Mark(container);
+
+    if (!highlightText?.trim()) {
+      mark.unmark();
+      return;
+    }
+
+    mark.unmark();
+    let normalized = highlightText.replace(/\s+/g, " ").trim();
+    // Strip leading clause identifiers (e.g. 1.1, 1.3a, 1.2a, 9.2)
+    normalized = normalized.replace(/^\d+(\.\d+)*[a-zA-Z]?[\s:]+/, "").trim();
+    if (!normalized) return;
+
+    // Use regex for exact phrase match to avoid partial word highlighting (e.g. "to" in next sentence)
+    const escaped = normalized.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const pattern = escaped.replace(/ /g, "\\s+");
+    const regex = new RegExp(pattern, "gi");
+
+    mark.markRegExp(regex, {
+      className: highlightIssueExist
+        ? "chunk-highlight chunk-highlight-red"
+        : "chunk-highlight chunk-highlight-green",
+      acrossElements: true,
+      ignoreJoiners: true,
+      done() {
+        const first = container.querySelector(".chunk-highlight");
+        if (first) {
+          first.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      },
+    });
+  }, [highlightText, highlightIssueExist, renderState]);
+
   const handleZoomIn = () => setZoom((z) => Math.min(z + 10, 200));
   const handleZoomOut = () => setZoom((z) => Math.max(z - 10, 50));
 
   const canToggleDiff = Boolean(diffUrl && hasPreviousVersion);
 
   return (
-    <section className="flex h-full min-h-0 flex-1 flex-col bg-white">
+    <section className="flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-white">
       {/* Top bar */}
       <header className="flex items-center justify-between border-b border-gray-200 bg-white px-5 py-3">
         <div className="flex items-center gap-3">

@@ -15,6 +15,10 @@ export default function JobViewerPage({ params }: JobViewerPageProps) {
   const router = useRouter();
   const [job, setJob] = useState<Job | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [highlightState, setHighlightState] = useState<{
+    text: string;
+    issueExist: boolean;
+  } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -36,9 +40,6 @@ export default function JobViewerPage({ params }: JobViewerPageProps) {
       cancelled = true;
     };
   }, [jobId]);
-
-  const issues = Array.isArray(job?.analysis) ? job.analysis : [];
-  const issueCount = issues.length;
 
   if (isLoading) {
     return (
@@ -75,21 +76,23 @@ export default function JobViewerPage({ params }: JobViewerPageProps) {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-gray-50 font-sans text-gray-900">
-      <div className="flex flex-1 overflow-hidden">
-        {/* Document area */}
-        <div className="flex min-w-0 flex-1 flex-col border-r border-gray-200">
+    <div className="flex h-screen flex-col overflow-hidden bg-gray-50 font-sans text-gray-900">
+      <div className="flex min-h-0 flex-1 overflow-hidden">
+        {/* Document area — 66% */}
+        <div className="flex min-h-0 min-w-0 flex-[0_0_66%] flex-col overflow-hidden border-r border-gray-200">
           <DocumentViewer
             currentUrl={job.currentUrl!}
             diffUrl={job.diffUrl}
             hasPreviousVersion={job.hasPreviousVersion ?? false}
             onBack={() => router.push("/")}
             policyName={job.policyName}
+            highlightText={highlightState?.text ?? null}
+            highlightIssueExist={highlightState?.issueExist ?? false}
           />
         </div>
 
-        {/* Right sidebar */}
-        <aside className="flex w-64 shrink-0 flex-col border-l border-gray-200 bg-white">
+        {/* Right sidebar — 34% */}
+        <aside className="flex min-h-0 min-w-0 flex-[0_0_34%] flex-col overflow-hidden border-l border-gray-200 bg-white">
           {/* Document details */}
           <div className="border-b border-gray-100 p-4">
               <p className="mb-3 text-xs font-medium uppercase tracking-wider text-gray-400">
@@ -118,29 +121,15 @@ export default function JobViewerPage({ params }: JobViewerPageProps) {
             </div>
 
           {/* Policy insights */}
-          <PolicyInsightsPanel analysis={job.analysis} />
+          <PolicyInsightsPanel
+            analysis={job.analysis}
+            onChunkClick={(text, issueExist) =>
+              setHighlightState({ text, issueExist })
+            }
+          />
         </aside>
       </div>
 
-      {/* Bottom issue bar */}
-      {issueCount > 0 && (
-        <div className="fixed bottom-4 left-4 z-50">
-          <div className="flex items-center gap-2 rounded-lg bg-gray-900 px-3 py-2 text-xs font-medium text-white shadow-lg">
-            <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-              {issueCount}
-            </span>
-            {issueCount === 1 ? "1 Issue" : `${issueCount} Issues`}
-            <button
-              type="button"
-              className="ml-1 leading-none text-gray-400 transition-colors hover:text-white"
-              onClick={() => {}}
-              aria-label="Dismiss"
-            >
-              ×
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
