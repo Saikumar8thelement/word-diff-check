@@ -47,6 +47,21 @@ button:disabled,
 .docx-preview {
   background-color: #ffffff;
 }
+/* docx-preview track changes: ins=added, del=removed */
+.docx-preview ins,
+.docx-container ins {
+  background-color: #dcfce7;
+  color: #166534;
+  text-decoration: none;
+}
+
+.docx-preview del,
+.docx-container del {
+  background-color: #fee2e2;
+  color: #991b1b;
+  text-decoration: none;
+}
+
 .diff-added {
   background: #dcfce7;
   color: #166534;
@@ -55,7 +70,7 @@ button:disabled,
 .diff-removed {
   background: #fee2e2;
   color: #991b1b;
-  text-decoration: line-through;
+  text-decoration: none;
 }
 
 .chunk-highlight {
